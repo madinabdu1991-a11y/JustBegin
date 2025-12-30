@@ -5,7 +5,7 @@
   <title>JustBegin — Start Small. Stay Consistent.</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Google Font -->
+  <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -16,7 +16,7 @@
 
     body {
       margin: 0;
-      background: #0F172A;
+      background: linear-gradient(180deg, #020617, #0F172A);
       color: #E5E7EB;
     }
 
@@ -47,10 +47,10 @@
 
     .hero button {
       background: #22C55E;
-      color: #0F172A;
+      color: #020617;
       border: none;
       padding: 14px 32px;
-      border-radius: 12px;
+      border-radius: 14px;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
@@ -58,8 +58,8 @@
     }
 
     .hero button:hover {
-      transform: translateY(-2px);
       background: #16A34A;
+      transform: translateY(-2px);
     }
 
     /* ARROW */
@@ -95,33 +95,52 @@
     }
 
     .card {
-      background: #020617;
-      border-radius: 16px;
-      padding: 24px;
+      background: radial-gradient(circle at top, #020617, #020617cc);
+      border-radius: 18px;
+      padding: 28px;
       margin-top: 32px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
 
     label {
       display: block;
       margin-bottom: 6px;
-      margin-top: 16px;
+      margin-top: 18px;
       color: #CBD5F5;
     }
 
     input {
       width: 100%;
-      padding: 12px;
-      border-radius: 10px;
+      padding: 14px;
+      border-radius: 12px;
       border: none;
       background: #020617;
       color: #E5E7EB;
       outline: 1px solid #1E293B;
+      font-size: 15px;
+    }
+
+    .card button {
+      margin-top: 24px;
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: #22C55E;
+      color: #020617;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .card button:hover {
+      background: #16A34A;
     }
 
     footer {
       text-align: center;
-      padding: 32px;
+      padding: 40px;
       color: #64748B;
       font-size: 14px;
     }
@@ -133,16 +152,15 @@
   <div class="hero">
     <h1>Start small.<br>Stay consistent.</h1>
     <p>
-      JustBegin helps you plan simple actions, build discipline,
-      and move forward — without pressure.
+      JustBegin helps you decide one simple action
+      and reminds you when it’s time to start.
     </p>
 
     <button onclick="scrollToPlan()">Just begin</button>
-
     <div class="arrow" onclick="scrollToPlan()">↓</div>
   </div>
 
-  <!-- PLAN SECTION -->
+  <!-- PLAN -->
   <section id="plan">
     <h2>Your first step</h2>
     <p>
@@ -152,21 +170,52 @@
 
     <div class="card">
       <label>What will you start?</label>
-      <input placeholder="Example: 10 minutes of reading">
+      <input id="task" placeholder="Example: 10 minutes of reading">
 
-      <label>When?</label>
-      <input placeholder="Example: Tomorrow at 9:00">
+      <label>When? (minutes)</label>
+      <input id="time" placeholder="Example: 10">
+
+      <button id="addTask">Start & remind me</button>
     </div>
   </section>
 
   <footer>
-    © JustBegin — Discipline without pressure
+    © JustBegin — discipline without pressure
   </footer>
 
   <script>
     function scrollToPlan() {
       document.getElementById("plan").scrollIntoView({ behavior: "smooth" });
     }
+
+    document.getElementById("addTask").addEventListener("click", () => {
+      const task = document.getElementById("task").value;
+      const minutes = parseInt(document.getElementById("time").value);
+
+      if (!task || !minutes) {
+        alert("Please enter task and time");
+        return;
+      }
+
+      if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
+
+      const delay = minutes * 60 * 1000;
+
+      localStorage.setItem("justbegin_task", JSON.stringify({
+        task,
+        time: Date.now() + delay
+      }));
+
+      setTimeout(() => {
+        new Notification("JustBegin", {
+          body: `Time to start: ${task}`,
+        });
+      }, delay);
+
+      alert("Reminder set. Just begin.");
+    });
   </script>
 
 </body>
