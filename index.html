@@ -120,7 +120,7 @@
     <input id="taskInput" placeholder="Example: 10 minutes of reading">
 
     <label>When? (minutes)</label>
-    <input id="timeInput" placeholder="Example: 15">
+    <input id="timeInput" type="number" min="1" placeholder="Example: 15">
 
     <button onclick="addTask()" style="margin-top:24px;width:100%;">
       Start & remind me
@@ -140,8 +140,16 @@
     document.getElementById("plan").scrollIntoView({ behavior: "smooth" });
   }
 
-  if (Notification.permission !== "granted") {
-    Notification.requestPermission();
+  async function ensureNotifications() {
+    if (!("Notification" in window)) {
+      alert("Your browser does not support notifications");
+      return false;
+    }
+
+    if (Notification.permission === "granted") return true;
+
+    const permission = await Notification.requestPermission();
+    return permission === "granted";
   }
 
   function getTasks() {
@@ -152,21 +160,25 @@
     localStorage.setItem("justbegin_tasks", JSON.stringify(tasks));
   }
 
-  function addTask() {
+  async function addTask() {
     const text = taskInput.value.trim();
-    const minutes = parseInt(timeInput.value);
+    const minutes = Number(timeInput.value);
 
-    if (!text || !minutes) {
-      alert("Fill in both fields");
+    if (!text || !Number.isFinite(minutes) || minutes <= 0) {
+      alert("Please fill in both fields correctly");
       return;
     }
 
-    const triggerTime = Date.now() + minutes * 60000;
+    const allowed = await ensureNotifications();
+    if (!allowed) {
+      alert("Please allow notifications to receive reminders");
+      return;
+    }
 
     const task = {
       id: Date.now(),
       text,
-      triggerTime,
+      triggerTime: Date.now() + minutes * 60000,
       notified: false
     };
 
@@ -183,7 +195,12 @@
 
   function scheduleTask(task) {
     const delay = task.triggerTime - Date.now();
-    if (delay <= 0 || task.notified) return;
+
+    if (delay <= 0) {
+      task.notified = true;
+      saveTasks(getTasks().map(t => t.id === task.id ? task : t));
+      return;
+    }
 
     setTimeout(() => {
       new Notification("JustBegin", {
@@ -200,9 +217,7 @@
 
   function renderTasks() {
     taskList.innerHTML = "";
-    const tasks = getTasks();
-
-    tasks.forEach(t => {
+    getTasks().forEach(t => {
       const div = document.createElement("div");
       div.className = "task";
       div.innerHTML = `
@@ -215,11 +230,12 @@
     });
   }
 
-  // RESTORE TASKS AFTER RELOAD
-  getTasks().forEach(scheduleTask);
+  // Restore timers
+  getTasks().forEach(t => {
+    if (!t.notified) scheduleTask(t);
+  });
   renderTasks();
 </script>
 
 </body>
 </html>
-
