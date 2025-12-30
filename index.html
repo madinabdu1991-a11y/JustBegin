@@ -5,14 +5,10 @@
   <title>JustBegin — Start Small. Stay Consistent.</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
     body {
       margin: 0;
@@ -20,7 +16,6 @@
       color: #E5E7EB;
     }
 
-    /* HERO */
     .hero {
       min-height: 100vh;
       display: flex;
@@ -31,10 +26,8 @@
       padding: 24px;
     }
 
-    .hero h1 {
+    h1 {
       font-size: 52px;
-      font-weight: 700;
-      line-height: 1.1;
       margin-bottom: 16px;
     }
 
@@ -45,7 +38,7 @@
       margin-bottom: 32px;
     }
 
-    .hero button {
+    button {
       background: #22C55E;
       color: #020617;
       border: none;
@@ -54,48 +47,16 @@
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      transition: 0.2s ease;
     }
 
-    .hero button:hover {
-      background: #16A34A;
-      transform: translateY(-2px);
-    }
-
-    /* ARROW */
-    .arrow {
-      margin-top: 40px;
-      font-size: 32px;
-      color: #22C55E;
-      animation: bounce 1.5s infinite;
-      cursor: pointer;
-    }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(8px); }
-    }
-
-    /* SECTION */
     section {
       max-width: 900px;
       margin: auto;
       padding: 80px 24px;
     }
 
-    section h2 {
-      font-size: 32px;
-      margin-bottom: 12px;
-    }
-
-    section p {
-      color: #94A3B8;
-      font-size: 18px;
-      max-width: 600px;
-    }
-
     .card {
-      background: radial-gradient(circle at top, #020617, #020617cc);
+      background: #020617;
       border-radius: 18px;
       padding: 28px;
       margin-top: 32px;
@@ -104,8 +65,8 @@
 
     label {
       display: block;
-      margin-bottom: 6px;
       margin-top: 18px;
+      margin-bottom: 6px;
       color: #CBD5F5;
     }
 
@@ -117,25 +78,22 @@
       background: #020617;
       color: #E5E7EB;
       outline: 1px solid #1E293B;
-      font-size: 15px;
     }
 
-    .card button {
-      margin-top: 24px;
-      width: 100%;
-      padding: 16px;
-      border-radius: 14px;
-      border: none;
-      background: #22C55E;
-      color: #020617;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s ease;
+    .task {
+      margin-top: 16px;
+      padding: 14px;
+      background: #020617;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      outline: 1px solid #1E293B;
     }
 
-    .card button:hover {
-      background: #16A34A;
+    .task span {
+      color: #94A3B8;
+      font-size: 14px;
     }
 
     footer {
@@ -148,75 +106,120 @@
 </head>
 <body>
 
-  <!-- HERO -->
-  <div class="hero">
-    <h1>Start small.<br>Stay consistent.</h1>
-    <p>
-      JustBegin helps you decide one simple action
-      and reminds you when it’s time to start.
-    </p>
+<div class="hero">
+  <h1>Start small.<br>Stay consistent.</h1>
+  <p>One action. One reminder. Just begin.</p>
+  <button onclick="scrollToPlan()">Just begin</button>
+</div>
 
-    <button onclick="scrollToPlan()">Just begin</button>
-    <div class="arrow" onclick="scrollToPlan()">↓</div>
+<section id="plan">
+  <h2>Your first step</h2>
+
+  <div class="card">
+    <label>What will you start?</label>
+    <input id="taskInput" placeholder="Example: 10 minutes of reading">
+
+    <label>When? (minutes)</label>
+    <input id="timeInput" placeholder="Example: 15">
+
+    <button onclick="addTask()" style="margin-top:24px;width:100%;">
+      Start & remind me
+    </button>
   </div>
 
-  <!-- PLAN -->
-  <section id="plan">
-    <h2>Your first step</h2>
-    <p>
-      Don’t plan your whole life.  
-      Just decide what you will start today.
-    </p>
+  <div class="card">
+    <h3>Active tasks</h3>
+    <div id="taskList"></div>
+  </div>
+</section>
 
-    <div class="card">
-      <label>What will you start?</label>
-      <input id="task" placeholder="Example: 10 minutes of reading">
+<footer>© JustBegin — discipline without pressure</footer>
 
-      <label>When? (minutes)</label>
-      <input id="time" placeholder="Example: 10">
+<script>
+  function scrollToPlan() {
+    document.getElementById("plan").scrollIntoView({ behavior: "smooth" });
+  }
 
-      <button id="addTask">Start & remind me</button>
-    </div>
-  </section>
+  if (Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
 
-  <footer>
-    © JustBegin — discipline without pressure
-  </footer>
+  function getTasks() {
+    return JSON.parse(localStorage.getItem("justbegin_tasks")) || [];
+  }
 
-  <script>
-    function scrollToPlan() {
-      document.getElementById("plan").scrollIntoView({ behavior: "smooth" });
+  function saveTasks(tasks) {
+    localStorage.setItem("justbegin_tasks", JSON.stringify(tasks));
+  }
+
+  function addTask() {
+    const text = taskInput.value.trim();
+    const minutes = parseInt(timeInput.value);
+
+    if (!text || !minutes) {
+      alert("Fill in both fields");
+      return;
     }
 
-    document.getElementById("addTask").addEventListener("click", () => {
-      const task = document.getElementById("task").value;
-      const minutes = parseInt(document.getElementById("time").value);
+    const triggerTime = Date.now() + minutes * 60000;
 
-      if (!task || !minutes) {
-        alert("Please enter task and time");
-        return;
-      }
+    const task = {
+      id: Date.now(),
+      text,
+      triggerTime,
+      notified: false
+    };
 
-      if (Notification.permission !== "granted") {
-        Notification.requestPermission();
-      }
+    const tasks = getTasks();
+    tasks.push(task);
+    saveTasks(tasks);
 
-      const delay = minutes * 60 * 1000;
+    scheduleTask(task);
+    renderTasks();
 
-      localStorage.setItem("justbegin_task", JSON.stringify({
-        task,
-        time: Date.now() + delay
-      }));
+    taskInput.value = "";
+    timeInput.value = "";
+  }
 
-      setTimeout(() => {
-        new Notification("JustBegin", {
-          body: `Time to start: ${task}`,
-        });
-      }, delay);
+  function scheduleTask(task) {
+    const delay = task.triggerTime - Date.now();
+    if (delay <= 0 || task.notified) return;
 
-      alert("Reminder set. Just begin.");
+    setTimeout(() => {
+      new Notification("JustBegin", {
+        body: `Time to start: ${task.text}`
+      });
+
+      const tasks = getTasks().map(t =>
+        t.id === task.id ? { ...t, notified: true } : t
+      );
+      saveTasks(tasks);
+      renderTasks();
+    }, delay);
+  }
+
+  function renderTasks() {
+    taskList.innerHTML = "";
+    const tasks = getTasks();
+
+    tasks.forEach(t => {
+      const div = document.createElement("div");
+      div.className = "task";
+      div.innerHTML = `
+        <div>
+          <strong>${t.text}</strong><br>
+          <span>${t.notified ? "Completed" : "Waiting..."}</span>
+        </div>
+      `;
+      taskList.appendChild(div);
     });
-  </script>
+  }
+
+  // RESTORE TASKS AFTER RELOAD
+  getTasks().forEach(scheduleTask);
+  renderTasks();
+</script>
 
 </body>
 </html>
+
