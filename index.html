@@ -85,9 +85,6 @@
       padding: 14px;
       background: #020617;
       border-radius: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       outline: 1px solid #1E293B;
     }
 
@@ -142,14 +139,12 @@
 
   async function ensureNotifications() {
     if (!("Notification" in window)) {
-      alert("Your browser does not support notifications");
+      alert("Browser does not support notifications");
       return false;
     }
-
     if (Notification.permission === "granted") return true;
-
-    const permission = await Notification.requestPermission();
-    return permission === "granted";
+    const p = await Notification.requestPermission();
+    return p === "granted";
   }
 
   function getTasks() {
@@ -165,13 +160,13 @@
     const minutes = Number(timeInput.value);
 
     if (!text || !Number.isFinite(minutes) || minutes <= 0) {
-      alert("Please fill in both fields correctly");
+      alert("Fill in both fields correctly");
       return;
     }
 
     const allowed = await ensureNotifications();
     if (!allowed) {
-      alert("Please allow notifications to receive reminders");
+      alert("Allow notifications to receive reminders");
       return;
     }
 
@@ -194,25 +189,29 @@
   }
 
   function scheduleTask(task) {
+    if (task.notified) return;
+
     const delay = task.triggerTime - Date.now();
 
+    // если время уже прошло — уведомляем СРАЗУ
     if (delay <= 0) {
-      task.notified = true;
-      saveTasks(getTasks().map(t => t.id === task.id ? task : t));
+      notify(task);
       return;
     }
 
-    setTimeout(() => {
-      new Notification("JustBegin", {
-        body: `Time to start: ${task.text}`
-      });
+    setTimeout(() => notify(task), delay);
+  }
 
-      const tasks = getTasks().map(t =>
-        t.id === task.id ? { ...t, notified: true } : t
-      );
-      saveTasks(tasks);
-      renderTasks();
-    }, delay);
+  function notify(task) {
+    new Notification("JustBegin", {
+      body: `Time to start: ${task.text}`
+    });
+
+    const tasks = getTasks().map(t =>
+      t.id === task.id ? { ...t, notified: true } : t
+    );
+    saveTasks(tasks);
+    renderTasks();
   }
 
   function renderTasks() {
@@ -221,19 +220,15 @@
       const div = document.createElement("div");
       div.className = "task";
       div.innerHTML = `
-        <div>
-          <strong>${t.text}</strong><br>
-          <span>${t.notified ? "Completed" : "Waiting..."}</span>
-        </div>
+        <strong>${t.text}</strong><br>
+        <span>${t.notified ? "Completed" : "Waiting..."}</span>
       `;
       taskList.appendChild(div);
     });
   }
 
-  // Restore timers
-  getTasks().forEach(t => {
-    if (!t.notified) scheduleTask(t);
-  });
+  // восстановление после перезагрузки
+  getTasks().forEach(scheduleTask);
   renderTasks();
 </script>
 
